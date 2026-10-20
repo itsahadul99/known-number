@@ -3,9 +3,12 @@
 import React from 'react';
 import { useSettings, TextSize, ContrastMode, AudioMode } from '@/lib/settings-context';
 import { Button } from '@/components/ui/button';
+import { Locale } from '@/lib/i18n/translations';
 
 export function SettingsModal() {
   const {
+    language,
+    setLanguage,
     textSize,
     setTextSize,
     contrast,
@@ -14,6 +17,7 @@ export function SettingsModal() {
     setAudio,
     isSettingsOpen,
     setIsSettingsOpen,
+    t,
   } = useSettings();
 
   if (!isSettingsOpen) return null;
@@ -28,11 +32,11 @@ export function SettingsModal() {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-paper text-ink border-2 border-ink rounded-panel max-w-lg w-full p-6 flex flex-col gap-5 shadow-lg"
+        className="bg-paper text-ink border-2 border-ink rounded-panel max-w-lg w-full p-6 flex flex-col gap-5 shadow-lg max-h-[90vh] overflow-y-auto"
       >
         <div className="flex justify-between items-center">
           <h2 id="settings-title" className="text-2xl font-bold">
-            Display & Audio Settings
+            {language === 'bn' ? 'ডিসপ্লে, ভাষা ও সাউন্ড সেটিংস' : 'Display & Audio Settings'}
           </h2>
           <button
             type="button"
@@ -44,14 +48,46 @@ export function SettingsModal() {
           </button>
         </div>
 
-        {/* Text Size Control */}
+        {/* Language Selection */}
         <fieldset className="border border-rule rounded-control p-4">
-          <legend className="font-bold px-2 text-ink">Text Size</legend>
+          <legend className="font-bold px-2 text-ink">{t.languageSelect}</legend>
           <div className="flex flex-col gap-2 mt-2">
             {[
-              { id: 'normal', label: 'Standard (20px)' },
-              { id: 'large', label: 'Large (24px)' },
-              { id: 'extra-large', label: 'Extra Large (28px)' },
+              { id: 'en', label: '🇺🇸 English (US & Global Scenarios)' },
+              { id: 'bn', label: '🇧🇩 বাংলা (বাংলাদেশি বিকাশ, নগদ ও স্বজন কল)' },
+            ].map((option) => (
+              <label
+                key={option.id}
+                className={`flex items-center gap-3 min-h-[48px] px-3 py-2 border rounded-control cursor-pointer transition-colors ${
+                  language === option.id
+                    ? 'border-2 border-signal-blue bg-panel font-bold'
+                    : 'border-control-edge bg-transparent hover:bg-panel'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="language"
+                  value={option.id}
+                  checked={language === option.id}
+                  onChange={() => setLanguage(option.id as Locale)}
+                  className="w-5 h-5 accent-signal-blue"
+                />
+                <span className="text-base">{option.label}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        {/* Text Size Control */}
+        <fieldset className="border border-rule rounded-control p-4">
+          <legend className="font-bold px-2 text-ink">
+            {language === 'bn' ? 'লেখার আকার (Text Size)' : 'Text Size'}
+          </legend>
+          <div className="flex flex-col gap-2 mt-2">
+            {[
+              { id: 'normal', label: language === 'bn' ? 'স্বাভাবিক (20px)' : 'Standard (20px)' },
+              { id: 'large', label: language === 'bn' ? 'বড় (24px)' : 'Large (24px)' },
+              { id: 'extra-large', label: language === 'bn' ? 'অনেক বড় (28px)' : 'Extra Large (28px)' },
             ].map((option) => (
               <label
                 key={option.id}
@@ -77,11 +113,13 @@ export function SettingsModal() {
 
         {/* High Contrast Mode */}
         <fieldset className="border border-rule rounded-control p-4">
-          <legend className="font-bold px-2 text-ink">Contrast Theme</legend>
+          <legend className="font-bold px-2 text-ink">
+            {language === 'bn' ? 'কনট্রাস্ট থিম' : 'Contrast Theme'}
+          </legend>
           <div className="flex flex-col gap-2 mt-2">
             {[
-              { id: 'normal', label: 'Standard contrast' },
-              { id: 'high', label: 'High contrast (pure black/white lines)' },
+              { id: 'normal', label: language === 'bn' ? 'স্বাভাবিক কনট্রাস্ট' : 'Standard contrast' },
+              { id: 'high', label: language === 'bn' ? 'হাই কনট্রাস্ট (উচ্চ স্পষ্টতা)' : 'High contrast (pure black/white lines)' },
             ].map((option) => (
               <label
                 key={option.id}
@@ -107,11 +145,13 @@ export function SettingsModal() {
 
         {/* Audio Spoken Voice */}
         <fieldset className="border border-rule rounded-control p-4">
-          <legend className="font-bold px-2 text-ink">Spoken Voice for Phone Calls</legend>
+          <legend className="font-bold px-2 text-ink">
+            {language === 'bn' ? 'ফোনের কথা পড়ে শোনানো (Audio)' : 'Spoken Voice for Phone Calls'}
+          </legend>
           <div className="flex flex-col gap-2 mt-2">
             {[
-              { id: 'off', label: 'Audio off (read transcript on screen)' },
-              { id: 'on', label: 'Audio on (browser reads caller lines aloud)' },
+              { id: 'off', label: language === 'bn' ? 'অডিও বন্ধ (স্ক্রিনে পড়ে দেখুন)' : 'Audio off (read transcript on screen)' },
+              { id: 'on', label: language === 'bn' ? 'অডিও চালু (ব্রাউজার পড়ে শোনাবে)' : 'Audio on (browser reads caller lines aloud)' },
             ].map((option) => (
               <label
                 key={option.id}
@@ -141,7 +181,7 @@ export function SettingsModal() {
           fullWidth
           size="default"
         >
-          Apply settings
+          {language === 'bn' ? 'সেটিংস প্রয়োগ করুন' : 'Apply settings'}
         </Button>
       </div>
     </div>
