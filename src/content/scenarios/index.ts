@@ -7,66 +7,45 @@ import { hospitalEmergencyScenarioBn } from './bn/hospital-emergency';
 import { courierPhishingScenarioBn } from './bn/courier-phishing';
 import { Locale } from '@/lib/i18n/translations';
 
-export const ALL_SCENARIOS: Scenario[] = [
-  // English Scenarios
+// English scenarios only
+export const ENGLISH_SCENARIOS: Scenario[] = [
   grandchildCallScenario,
   bankFraudScenario,
   parcelPhishingScenario,
+];
 
-  // Native Bangla (বাংলা) Scenarios
-  hospitalEmergencyScenarioBn,
+// Bangla scenarios only
+export const BANGLA_SCENARIOS: Scenario[] = [
   bkashFraudScenarioBn,
+  hospitalEmergencyScenarioBn,
   courierPhishingScenarioBn,
 ];
 
-// Paired cross-language counterpart scenarios
-export const SCENARIO_PAIRS: Record<string, string> = {
-  'grandchild-call': 'hospital-emergency-bn',
-  'hospital-emergency-bn': 'grandchild-call',
-  'bank-fraud': 'bkash-fraud-bn',
-  'bkash-fraud-bn': 'bank-fraud',
-  'parcel-phishing': 'courier-phishing-bn',
-  'courier-phishing-bn': 'parcel-phishing',
-};
+// All scenarios across all regions
+export const ALL_SCENARIOS: Scenario[] = [
+  ...ENGLISH_SCENARIOS,
+  ...BANGLA_SCENARIOS,
+];
 
 export function getScenarioById(id: string): Scenario | undefined {
   return ALL_SCENARIOS.find((s) => s.id === id);
 }
 
-export function getAllScenarios(locale?: Locale): Scenario[] {
-  if (locale === 'bn') {
-    return [
-      hospitalEmergencyScenarioBn,
-      bkashFraudScenarioBn,
-      courierPhishingScenarioBn,
-      // fallback English scenarios
-      grandchildCallScenario,
-      bankFraudScenario,
-      parcelPhishingScenario,
-    ];
-  }
-
-  return [
-    grandchildCallScenario,
-    bankFraudScenario,
-    parcelPhishingScenario,
-    hospitalEmergencyScenarioBn,
-    bkashFraudScenarioBn,
-    courierPhishingScenarioBn,
-  ];
-}
-
+/**
+ * Returns strictly the scenarios belonging to the selected locale:
+ * If 'bn', returns only Bangla scenarios.
+ * If 'en', returns only English scenarios.
+ */
 export function getScenariosForLocale(locale: Locale): Scenario[] {
   if (locale === 'bn') {
-    return [
-      hospitalEmergencyScenarioBn,
-      bkashFraudScenarioBn,
-      courierPhishingScenarioBn,
-    ];
+    return BANGLA_SCENARIOS;
   }
-  return [
-    grandchildCallScenario,
-    bankFraudScenario,
-    parcelPhishingScenario,
-  ];
+  return ENGLISH_SCENARIOS;
+}
+
+export function getAllScenarios(locale?: Locale): Scenario[] {
+  if (locale) {
+    return getScenariosForLocale(locale);
+  }
+  return ALL_SCENARIOS;
 }

@@ -1,8 +1,11 @@
+'use client';
+
 import React, { useEffect, useRef } from 'react';
 import { RedFlagIcon, SafeOutcomeIcon } from '@/components/sign/Pictograms';
 import { HabitBadge, HabitType } from '@/components/sign/HabitBadge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useSettings } from '@/lib/settings-context';
 
 interface FeedbackPanelProps {
   isSafeChoice: boolean;
@@ -20,9 +23,10 @@ export function FeedbackPanel({
   whatToDoInstead,
   habitAwarded,
   onContinue,
-  continueLabel = 'Continue',
+  continueLabel,
   className,
 }: FeedbackPanelProps) {
+  const { t } = useSettings();
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
@@ -52,7 +56,7 @@ export function FeedbackPanel({
           tabIndex={-1}
           className="text-xl font-bold text-ink outline-none"
         >
-          {isSafeChoice ? 'Good instinct' : 'Why a scammer loves this response'}
+          {isSafeChoice ? t.goodInstinct : t.scammerLovesReply}
         </h3>
       </div>
 
@@ -63,7 +67,7 @@ export function FeedbackPanel({
       {whatToDoInstead && (
         <div className="bg-paper p-4 rounded-control border border-control-edge">
           <span className="font-bold text-sm text-ink block">
-            What to do instead:
+            {t.whatToDoInstead}
           </span>
           <p className="text-base text-ink mt-1 leading-relaxed">
             {whatToDoInstead}
@@ -76,12 +80,10 @@ export function FeedbackPanel({
           <HabitBadge habit={habitAwarded} state="shown" size="small" showStateLabel={false} />
           <div>
             <span className="font-bold text-sm text-signal-blue block">
-              Habit demonstrated: {habitAwarded.toUpperCase()}
+              {t.habitAwarded} {t.habits[habitAwarded]?.name || habitAwarded}
             </span>
             <p className="text-xs text-ink-muted mt-0.5">
-              {habitAwarded === 'pause' && 'You slowed down the urgency instead of rushing.'}
-              {habitAwarded === 'verify' && 'You checked through an independent, trusted channel.'}
-              {habitAwarded === 'tell' && 'You consulted someone you trust to break isolation.'}
+              {t.habits[habitAwarded]?.desc}
             </p>
           </div>
         </div>
@@ -94,7 +96,7 @@ export function FeedbackPanel({
         fullWidth
         className="mt-2"
       >
-        {continueLabel}
+        {continueLabel || t.continueDrill}
       </Button>
     </section>
   );

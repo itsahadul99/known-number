@@ -33,13 +33,22 @@ export default function OrganisePage() {
   const drillLink = `${baseUrl}/drill/${selectedScenario.id}#${hashParams}`;
 
   let messagePreview = '';
+  const signature = senderName.trim() ? ` — ${senderName.trim()}` : '';
+
   if (language === 'bn') {
     const greeting = recipientName.trim() ? `${recipientName.trim()}, ` : 'আম্মু, ';
-    const signature = senderName.trim() ? ` — ${senderName.trim()}` : '';
     messagePreview = `${greeting}Known Number দেখে নাও। মাত্র ৫ মিনিট লাগবে। প্রতারক চক্র কীভাবে ফোন দিয়ে ভয় দেখায় ও টাকা হাতিয়ে নেয় তা নিরাপদে অনুশীলন করা যায়। এই লিঙ্কটি খুলে প্র্যাকটিস করে নাও:\n\n${drillLink}${signature}`;
+  } else if (language === 'hi') {
+    const greeting = recipientName.trim() ? `${recipientName.trim()}, ` : 'मम्मी, ';
+    messagePreview = `${greeting}Known Number आज़माएं। सिर्फ 5 मिनट लगेंगे। धोखेबाज़ फोन पर कैसे दबाव बनाते हैं, उसका सुरक्षित अभ्यास कर लें:\n\n${drillLink}${signature}`;
+  } else if (language === 'es') {
+    const greeting = recipientName.trim() ? `${recipientName.trim()}, ` : 'Mamá, ';
+    messagePreview = `${greeting}prueba Known Number. Solo toma cinco minutos para practicar cómo reaccionar ante llamadas fraudulentas con seguridad:\n\n${drillLink}${signature}`;
+  } else if (language === 'ar') {
+    const greeting = recipientName.trim() ? `${recipientName.trim()}, ` : 'أمي، ';
+    messagePreview = `${greeting}جرّبي Known Number. يستغرق خمس دقائق فقط للتدرب على كيفية التصرف مع المكالمات الاحتيالية بأمان:\n\n${drillLink}${signature}`;
   } else {
     const greeting = recipientName.trim() ? `${recipientName.trim()}, ` : 'Mum, ';
-    const signature = senderName.trim() ? ` — ${senderName.trim()}` : '';
     messagePreview = `${greeting}try Known Number. It takes five minutes and rehearses the realistic calls scammers use so you know how to react in safety. Check this drill:\n\n${drillLink}${signature}`;
   }
 
@@ -63,7 +72,7 @@ export default function OrganisePage() {
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({
-          title: `Known Number Rehearsal: ${selectedScenario.title}`,
+          title: `Known Number: ${selectedScenario.title}`,
           text: messagePreview,
           url: drillLink,
         });
@@ -82,7 +91,7 @@ export default function OrganisePage() {
       <main className="max-w-3xl w-full mx-auto px-4 py-8 flex flex-col gap-8">
         <header>
           <span className="text-xs text-signal-blue font-bold uppercase tracking-wider">
-            {language === 'bn' ? 'পারিবারিক ড্রিল তৈরি' : 'Family Organiser'}
+            {t.sendFamilyDrill}
           </span>
           <h1 className="text-3xl sm:text-4xl font-bold mt-1 text-ink">
             {t.organiseTitle}
@@ -100,6 +109,10 @@ export default function OrganisePage() {
           <div className="flex flex-col gap-3 mt-4">
             {scenarios.map((scenario) => {
               const isSelected = scenario.id === selectedScenarioId;
+              const durationText = `${scenario.durationMin} ${
+                language === 'bn' ? 'মিনিট' : language === 'hi' ? 'मिनट' : 'min'
+              }`;
+
               return (
                 <label
                   key={scenario.id}
@@ -122,15 +135,12 @@ export default function OrganisePage() {
                       <span className="font-bold text-lg text-ink">
                         {scenario.title}
                       </span>
-                      <span className="text-xs bg-paper px-2 py-0.5 rounded border border-rule font-semibold text-ink-muted">
-                        {scenario.region === 'bd' ? '🇧🇩 বাংলা' : '🇺🇸 English'}
-                      </span>
                     </div>
                     <span className="text-sm text-ink-muted mt-0.5 leading-relaxed">
                       {scenario.summary}
                     </span>
                     <span className="text-xs text-signal-blue font-semibold mt-2">
-                      {language === 'bn' ? `আনুমানিক সময়: ${scenario.durationMin} মিনিট` : `Estimated time: ${scenario.durationMin} minutes`}
+                      ~{durationText}
                     </span>
                   </div>
                 </label>
@@ -158,7 +168,7 @@ export default function OrganisePage() {
               <input
                 id={recipientInputId}
                 type="text"
-                placeholder={language === 'bn' ? 'যেমন: আম্মু, বাবা, নানা' : 'e.g. Mum, Grandpa, David'}
+                placeholder={language === 'bn' ? 'যেমন: আম্মু, বাবা, নানা' : language === 'hi' ? 'जैसे: मम्मी, पापा' : 'e.g. Mum, Grandpa, David'}
                 value={recipientName}
                 onChange={(e) => setRecipientName(e.target.value)}
                 className="min-h-[48px] px-4 py-2 border-2 border-control-edge rounded-control text-base focus-visible:outline-signal-blue"
@@ -172,7 +182,7 @@ export default function OrganisePage() {
               <input
                 id={senderInputId}
                 type="text"
-                placeholder={language === 'bn' ? 'যেমন: আহাদুল, তারেক' : 'e.g. Sam, Sarah'}
+                placeholder={language === 'bn' ? 'যেমন: আহাদুল, তারেক' : language === 'hi' ? 'जैसे: राहुल, प्रिया' : 'e.g. Sam, Sarah'}
                 value={senderName}
                 onChange={(e) => setSenderName(e.target.value)}
                 className="min-h-[48px] px-4 py-2 border-2 border-control-edge rounded-control text-base focus-visible:outline-signal-blue"

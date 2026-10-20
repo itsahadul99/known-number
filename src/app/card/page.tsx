@@ -1,16 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { PauseIcon, VerifyIcon, TellIcon } from '@/components/sign/Pictograms';
 import { Button } from '@/components/ui/button';
 import { useSettings } from '@/lib/settings-context';
-import { Locale } from '@/lib/i18n/translations';
 
 export default function CardPage() {
-  const { language: initialLanguage } = useSettings();
-  const [printLang, setPrintLang] = useState<Locale>(initialLanguage);
+  const { language } = useSettings();
 
   const handlePrint = () => {
     if (typeof window !== 'undefined') {
@@ -18,7 +16,7 @@ export default function CardPage() {
     }
   };
 
-  const isBn = printLang === 'bn';
+  const isBn = language === 'bn';
 
   return (
     <div className="flex flex-col min-h-screen bg-paper text-ink">
@@ -39,37 +37,14 @@ export default function CardPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="inline-flex rounded-control border border-rule p-1 bg-panel text-xs">
-              <button
-                type="button"
-                onClick={() => setPrintLang('en')}
-                className={`px-2.5 py-1.5 rounded-sm font-semibold transition-colors ${
-                  !isBn ? 'bg-signal-blue text-white' : 'text-ink hover:text-signal-blue'
-                }`}
-              >
-                🇺🇸 English
-              </button>
-              <button
-                type="button"
-                onClick={() => setPrintLang('bn')}
-                className={`px-2.5 py-1.5 rounded-sm font-semibold transition-colors ${
-                  isBn ? 'bg-signal-blue text-white' : 'text-ink hover:text-signal-blue'
-                }`}
-              >
-                🇧🇩 বাংলা
-              </button>
-            </div>
-
-            <Button
-              type="button"
-              onClick={handlePrint}
-              size="default"
-              className="shrink-0"
-            >
-              🖨️ {isBn ? 'প্রিন্ট করুন' : 'Print card'}
-            </Button>
-          </div>
+          <Button
+            type="button"
+            onClick={handlePrint}
+            size="default"
+            className="shrink-0"
+          >
+            🖨️ {isBn ? 'প্রিন্ট করুন' : 'Print card'}
+          </Button>
         </div>
 
         {/* PRINTABLE CARD CONTAINER */}

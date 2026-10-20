@@ -76,7 +76,8 @@ export type EngineAction =
   | { type: 'SELECT_CHOICE'; choice: Choice }
   | { type: 'ADVANCE_NODE' }
   | { type: 'TAP_FLAG'; flagId: string }
-  | { type: 'RESTART' };
+  | { type: 'RESTART' }
+  | { type: 'SET_SCENARIO'; scenario: Scenario };
 
 export function createInitialEngineState(scenario: Scenario): EngineState {
   return {
@@ -161,6 +162,10 @@ export function scenarioReducer(state: EngineState, action: EngineAction): Engin
 
     case 'RESTART': {
       return createInitialEngineState(state.scenario);
+    }
+
+    case 'SET_SCENARIO': {
+      return createInitialEngineState(action.scenario);
     }
 
     default:

@@ -1,5 +1,8 @@
+'use client';
+
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { useSettings } from '@/lib/settings-context';
 
 interface RouteLineProps {
   currentStep: number;
@@ -8,6 +11,7 @@ interface RouteLineProps {
 }
 
 export function RouteLine({ currentStep, totalSteps, className }: RouteLineProps) {
+  const { t } = useSettings();
   const steps = Array.from({ length: totalSteps }, (_, i) => i + 1);
 
   return (
@@ -17,11 +21,11 @@ export function RouteLine({ currentStep, totalSteps, className }: RouteLineProps
       aria-valuenow={currentStep}
       aria-valuemin={1}
       aria-valuemax={totalSteps}
-      aria-label={`Step ${currentStep} of ${totalSteps}`}
+      aria-label={`${t.stepText} ${currentStep} ${t.ofText} ${totalSteps}`}
     >
       <div className="flex justify-between items-center">
         <span className="font-bold text-base text-ink">
-          Step {currentStep} of {totalSteps}
+          {t.stepText} {currentStep} {t.ofText} {totalSteps}
         </span>
       </div>
 

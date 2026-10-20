@@ -1,6 +1,9 @@
+'use client';
+
 import React from 'react';
 import { SafeOutcomeIcon, UnsafeOutcomeIcon } from './Pictograms';
 import { cn } from '@/lib/utils';
+import { useSettings } from '@/lib/settings-context';
 
 interface OutcomeSignProps {
   outcome: 'safe' | 'unsafe';
@@ -10,6 +13,7 @@ interface OutcomeSignProps {
 }
 
 export function OutcomeSign({ outcome, title, summary, className }: OutcomeSignProps) {
+  const { t } = useSettings();
   const isSafe = outcome === 'safe';
 
   return (
@@ -22,7 +26,7 @@ export function OutcomeSign({ outcome, title, summary, className }: OutcomeSignP
         className
       )}
       role="region"
-      aria-label={isSafe ? 'Safe outcome' : 'Unsafe outcome'}
+      aria-label={isSafe ? t.safeBadge : t.unsafeBadge}
     >
       <div className="shrink-0 mt-0.5" aria-hidden="true">
         {isSafe ? <SafeOutcomeIcon size={44} /> : <UnsafeOutcomeIcon size={44} />}
@@ -35,11 +39,11 @@ export function OutcomeSign({ outcome, title, summary, className }: OutcomeSignP
             isSafe ? 'text-safe-green' : 'text-stop-red'
           )}
         >
-          {isSafe ? 'Safe outcome' : 'Unsafe outcome'}
+          {isSafe ? t.safeBadge : t.unsafeBadge}
         </span>
 
         <h3 className="text-xl font-bold text-ink leading-snug">
-          {title || (isSafe ? 'You protected yourself and took control' : 'A scammer would have succeeded here')}
+          {title || (isSafe ? t.safeOutcomeTitle : t.unsafeOutcomeTitle)}
         </h3>
 
         {summary && (

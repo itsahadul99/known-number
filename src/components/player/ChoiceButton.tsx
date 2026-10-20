@@ -49,8 +49,8 @@ export function ChoiceButton({
       )}
       <span className="flex-1">{label}</span>
       {isSelected && (
-        <span className="text-xs text-signal-blue font-bold uppercase tracking-wider">
-          Selected
+        <span className="text-base text-signal-blue font-bold">
+          ✓
         </span>
       )}
     </button>

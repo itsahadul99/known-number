@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Logo } from './Logo';
 import { useSettings } from '@/lib/settings-context';
+import { SUPPORTED_LANGUAGES, Locale } from '@/lib/i18n/translations';
 
 export function Header() {
   const {
@@ -15,9 +16,11 @@ export function Header() {
     t,
   } = useSettings();
 
-  const toggleLanguage = () => {
-    setLanguage(language === 'en' ? 'bn' : 'en');
+  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setLanguage(e.target.value as Locale);
   };
+
+  const currentLangObj = SUPPORTED_LANGUAGES.find((l) => l.code === language) || SUPPORTED_LANGUAGES[0];
 
   return (
     <header className="border-b border-rule bg-paper px-4 py-3">
@@ -25,15 +28,25 @@ export function Header() {
         <Logo showTagline={true} />
 
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Quick Language Toggle */}
-          <button
-            type="button"
-            onClick={toggleLanguage}
-            className="bg-panel border-2 border-control-edge rounded-control px-2.5 py-1.5 text-sm font-bold text-ink cursor-pointer min-h-[44px] inline-flex items-center gap-1.5 hover:bg-panel-darker transition-colors"
-            aria-label={`Switch language. Current: ${language === 'en' ? 'English' : 'বাংলা'}`}
-          >
-            <span>{language === 'en' ? '🇧🇩 বাংলা' : '🇺🇸 English'}</span>
-          </button>
+          {/* Universal Language Selector */}
+          <div className="relative inline-flex items-center">
+            <label htmlFor="language-select-header" className="sr-only">
+              {t.languageSelect}
+            </label>
+            <select
+              id="language-select-header"
+              value={language}
+              onChange={handleLanguageChange}
+              className="bg-panel border-2 border-control-edge rounded-control px-2.5 py-1.5 text-sm font-bold text-ink cursor-pointer min-h-[44px] hover:bg-panel-darker transition-colors focus-visible:outline-signal-blue"
+              aria-label={t.languageSelect}
+            >
+              {SUPPORTED_LANGUAGES.map((lang) => (
+                <option key={lang.code} value={lang.code}>
+                  {lang.flag} {lang.nativeName}
+                </option>
+              ))}
+            </select>
+          </div>
 
           <Link
             href="/organise"

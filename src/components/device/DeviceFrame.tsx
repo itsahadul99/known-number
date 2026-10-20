@@ -1,5 +1,8 @@
+'use client';
+
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { useSettings } from '@/lib/settings-context';
 
 export type ChannelType = 'call-incoming' | 'call-active' | 'sms' | 'chat' | 'email' | 'popup';
 
@@ -14,7 +17,7 @@ interface DeviceFrameProps {
   channel: ChannelType;
   senderName: string;
   senderSubtitle?: string;
-  caption: string;
+  caption?: string;
   messages: DeviceMessage[];
   onAnswer?: () => void;
   onDecline?: () => void;
@@ -33,6 +36,8 @@ export function DeviceFrame({
   callDuration = '00:42',
   className,
 }: DeviceFrameProps) {
+  const { t } = useSettings();
+
   return (
     <figure className={cn('my-4 w-full max-w-md mx-auto', className)}>
       {/* Outer Phone Shell */}
@@ -49,7 +54,7 @@ export function DeviceFrame({
             <div className="p-6 px-4 flex flex-col items-center justify-between flex-1 text-center bg-device-bg">
               <div className="flex flex-col items-center">
                 <span className="text-xs text-device-text-muted uppercase tracking-wider font-semibold">
-                  Incoming call
+                  {t.deviceInCall ? `${t.deviceInCall}...` : 'Incoming call'}
                 </span>
                 <h3 className="text-2xl font-bold mt-2 text-device-text">
                   {senderName}
@@ -74,7 +79,7 @@ export function DeviceFrame({
                     onClick={onDecline}
                     className="flex-1 bg-device-call-red text-white rounded-control min-h-[52px] font-bold cursor-pointer hover:opacity-90 active:scale-95 transition-all"
                   >
-                    Decline
+                    {t.deviceDecline}
                   </button>
                 )}
                 {onAnswer && (
@@ -83,7 +88,7 @@ export function DeviceFrame({
                     onClick={onAnswer}
                     className="flex-1 bg-device-call-green text-white rounded-control min-h-[52px] font-bold cursor-pointer hover:opacity-90 active:scale-95 transition-all"
                   >
-                    Answer
+                    {t.deviceAnswer}
                   </button>
                 )}
               </div>
@@ -95,12 +100,12 @@ export function DeviceFrame({
             <div className="flex flex-col flex-1 bg-device-bg">
               <div className="p-3 px-4 bg-panel border-b border-device-border text-center">
                 <div className="font-bold text-lg text-ink">{senderName}</div>
-                <div className="text-xs text-ink-muted">In call · {callDuration}</div>
+                <div className="text-xs text-ink-muted">{t.deviceInCall} · {callDuration}</div>
               </div>
 
               <div className="p-4 flex-1 flex flex-col gap-3">
                 <span className="text-xs uppercase text-ink-muted font-bold tracking-wider">
-                  Live transcript:
+                  {t.deviceLiveTranscript}
                 </span>
                 {messages.map((msg, idx) => (
                   <div
@@ -152,7 +157,7 @@ export function DeviceFrame({
             <div className="flex flex-col flex-1 bg-device-bg">
               <div className="p-3 px-4 bg-slate-200 border-b border-device-border">
                 <div className="font-bold text-base text-ink">{senderName}</div>
-                <div className="text-xs text-ink-muted">Online · Unknown contact</div>
+                <div className="text-xs text-ink-muted">Online · {senderSubtitle || 'Unknown contact'}</div>
               </div>
 
               <div className="p-4 flex-1 flex flex-col gap-3">
@@ -172,7 +177,7 @@ export function DeviceFrame({
           {channel === 'popup' && (
             <div className="flex flex-col flex-1 bg-rose-50 border-2 border-stop-red">
               <div className="bg-stop-red text-white p-2 px-4 font-bold text-sm tracking-wide">
-                CRITICAL SECURITY ALERT - DO NOT CLOSE
+                {t.deviceSimulatedScreen}
               </div>
               <div className="p-4 flex-1 flex flex-col gap-3 text-rose-900">
                 <h4 className="text-lg font-bold text-rose-950">{senderName}</h4>
@@ -191,7 +196,7 @@ export function DeviceFrame({
               <div className="p-3 px-4 bg-panel border-b border-device-border">
                 <div className="text-xs text-ink-muted">From: {senderName}</div>
                 <div className="font-bold text-base text-ink mt-0.5">
-                  {senderSubtitle || 'Urgent: Action required on your account'}
+                  {senderSubtitle || 'Notification'}
                 </div>
               </div>
               <div className="p-4 flex-1">
@@ -208,7 +213,7 @@ export function DeviceFrame({
 
       {/* Screen Reader and Visible Caption */}
       <figcaption className="mt-2 text-xs text-ink-muted text-left font-semibold">
-        {caption}
+        {caption || t.deviceSimulatedScreen}
       </figcaption>
     </figure>
   );

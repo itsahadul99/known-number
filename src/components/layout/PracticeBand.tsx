@@ -1,5 +1,8 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
+import { useSettings } from '@/lib/settings-context';
 
 interface PracticeBandProps {
   onStop?: () => void;
@@ -7,6 +10,8 @@ interface PracticeBandProps {
 }
 
 export function PracticeBand({ onStop, stopHref = '/' }: PracticeBandProps) {
+  const { t } = useSettings();
+
   return (
     <aside
       className="sticky top-0 z-50 bg-signal-blue text-white min-h-[52px] flex items-center px-4 py-2 border-b-2 border-ink shadow-sm"
@@ -16,7 +21,7 @@ export function PracticeBand({ onStop, stopHref = '/' }: PracticeBandProps) {
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-white inline-block animate-pulse" aria-hidden="true" />
           <span className="font-bold text-base tracking-wide">
-            Practice. Nothing here is real.
+            {t.practiceBanner}
           </span>
         </div>
 
@@ -25,17 +30,17 @@ export function PracticeBand({ onStop, stopHref = '/' }: PracticeBandProps) {
             type="button"
             onClick={onStop}
             className="bg-transparent text-white border-2 border-white rounded-control px-3 py-1 text-sm font-semibold min-h-[38px] hover:bg-white hover:text-signal-blue transition-colors cursor-pointer"
-            aria-label="Stop current practice drill"
+            aria-label={t.stopPractice}
           >
-            Stop practice
+            {t.stopPractice}
           </button>
         ) : (
           <Link
             href={stopHref}
             className="bg-transparent text-white border-2 border-white rounded-control px-3 py-1 text-sm font-semibold min-h-[38px] hover:bg-white hover:text-signal-blue transition-colors inline-flex items-center no-underline"
-            aria-label="Stop current practice drill and return home"
+            aria-label={t.stopPractice}
           >
-            Stop practice
+            {t.stopPractice}
           </Link>
         )}
       </div>

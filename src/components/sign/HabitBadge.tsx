@@ -1,6 +1,9 @@
+'use client';
+
 import React from 'react';
 import { PauseIcon, VerifyIcon, TellIcon } from './Pictograms';
 import { cn } from '@/lib/utils';
+import { useSettings } from '@/lib/settings-context';
 
 export type HabitType = 'pause' | 'verify' | 'tell';
 
@@ -12,27 +15,6 @@ interface HabitBadgeProps {
   className?: string;
 }
 
-const HABIT_CONFIG: Record<
-  HabitType,
-  { label: string; actionText: string; icon: (props: { size: number; color: string }) => React.JSX.Element }
-> = {
-  pause: {
-    label: 'Pause',
-    actionText: 'Take a breath before reacting',
-    icon: (p) => <PauseIcon {...p} />,
-  },
-  verify: {
-    label: 'Verify',
-    actionText: 'Call back on a known number',
-    icon: (p) => <VerifyIcon {...p} />,
-  },
-  tell: {
-    label: 'Tell',
-    actionText: 'Tell a friend or family member',
-    icon: (p) => <TellIcon {...p} />,
-  },
-};
-
 export function HabitBadge({
   habit,
   state = 'neutral',
@@ -40,9 +22,11 @@ export function HabitBadge({
   showStateLabel = true,
   className,
 }: HabitBadgeProps) {
-  const config = HABIT_CONFIG[habit];
+  const { t } = useSettings();
   const isShown = state === 'shown';
   const isNeutral = state === 'neutral';
+
+  const habitName = t.habits[habit]?.name || habit;
 
   const dimensions = {
     small: 'w-9 h-9',
@@ -55,6 +39,12 @@ export function HabitBadge({
     medium: 28,
     large: 38,
   }[size];
+
+  const renderIcon = (p: { size: number; color: string }) => {
+    if (habit === 'pause') return <PauseIcon {...p} />;
+    if (habit === 'verify') return <VerifyIcon {...p} />;
+    return <TellIcon {...p} />;
+  };
 
   return (
     <div className={cn('inline-flex flex-col items-center gap-2 text-center', className)}>
@@ -69,7 +59,7 @@ export function HabitBadge({
         )}
         aria-hidden="true"
       >
-        {config.icon({
+        {renderIcon({
           size: iconSizes,
           color: isShown || isNeutral ? '#FFFFFF' : 'currentColor',
         })}
@@ -82,7 +72,7 @@ export function HabitBadge({
             size === 'small' ? 'text-sm' : 'text-base'
           )}
         >
-          {config.label}
+          {habitName}
         </span>
 
         {showStateLabel && state !== 'neutral' && (
@@ -92,7 +82,7 @@ export function HabitBadge({
               isShown ? 'text-safe-green font-bold' : 'text-ink-muted'
             )}
           >
-            {isShown ? 'Shown' : 'Not yet'}
+            {isShown ? t.habitShown : t.habitNotYet}
           </span>
         )}
       </div>

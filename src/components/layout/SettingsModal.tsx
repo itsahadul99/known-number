@@ -3,7 +3,7 @@
 import React from 'react';
 import { useSettings, TextSize, ContrastMode, AudioMode } from '@/lib/settings-context';
 import { Button } from '@/components/ui/button';
-import { Locale } from '@/lib/i18n/translations';
+import { Locale, SUPPORTED_LANGUAGES } from '@/lib/i18n/translations';
 
 export function SettingsModal() {
   const {
@@ -52,14 +52,11 @@ export function SettingsModal() {
         <fieldset className="border border-rule rounded-control p-4">
           <legend className="font-bold px-2 text-ink">{t.languageSelect}</legend>
           <div className="flex flex-col gap-2 mt-2">
-            {[
-              { id: 'en', label: '🇺🇸 English (US & Global Scenarios)' },
-              { id: 'bn', label: '🇧🇩 বাংলা (বাংলাদেশি বিকাশ, নগদ ও স্বজন কল)' },
-            ].map((option) => (
+            {SUPPORTED_LANGUAGES.map((option) => (
               <label
-                key={option.id}
+                key={option.code}
                 className={`flex items-center gap-3 min-h-[48px] px-3 py-2 border rounded-control cursor-pointer transition-colors ${
-                  language === option.id
+                  language === option.code
                     ? 'border-2 border-signal-blue bg-panel font-bold'
                     : 'border-control-edge bg-transparent hover:bg-panel'
                 }`}
@@ -67,12 +64,15 @@ export function SettingsModal() {
                 <input
                   type="radio"
                   name="language"
-                  value={option.id}
-                  checked={language === option.id}
-                  onChange={() => setLanguage(option.id as Locale)}
+                  value={option.code}
+                  checked={language === option.code}
+                  onChange={() => setLanguage(option.code as Locale)}
                   className="w-5 h-5 accent-signal-blue"
                 />
-                <span className="text-base">{option.label}</span>
+                <span className="text-base flex items-center gap-2">
+                  <span>{option.flag}</span>
+                  <span>{option.nativeName}</span>
+                </span>
               </label>
             ))}
           </div>
@@ -151,7 +151,7 @@ export function SettingsModal() {
           <div className="flex flex-col gap-2 mt-2">
             {[
               { id: 'off', label: language === 'bn' ? 'অডিও বন্ধ (স্ক্রিনে পড়ে দেখুন)' : 'Audio off (read transcript on screen)' },
-              { id: 'on', label: language === 'bn' ? 'অডিও চালু (ব্রাউজার পড়ে শোনাবে)' : 'Audio on (browser reads caller lines aloud)' },
+              { id: 'on', label: language === 'bn' ? 'অডিও চালু (উচ্চমানের ভয়েস স্বয়ংক্রিয়ভাবে চলবে)' : 'Audio on (high-fidelity neural voice)' },
             ].map((option) => (
               <label
                 key={option.id}

@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useReducer, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useReducer, useEffect, useState, useCallback } from 'react';
 import {
   Scenario,
   scenarioReducer,
@@ -17,7 +16,8 @@ import { FeedbackPanel } from './FeedbackPanel';
 import { DebriefScreen } from './DebriefScreen';
 import { DeviceFrame, ChannelType } from '@/components/device/DeviceFrame';
 import { encodeResultHash } from '@/lib/share';
-import { SCENARIO_PAIRS } from '@/content/scenarios';
+import { speakText, stopSpeech } from '@/lib/speech';
+import { translateScenario } from '@/lib/translator';
 
 interface ScenarioPlayerProps {
   scenario: Scenario;
@@ -27,50 +27,88 @@ interface ScenarioPlayerProps {
 }
 
 export function ScenarioPlayer({
-  scenario,
+  scenario: initialScenario,
   fromName,
   toName,
   onExit,
 }: ScenarioPlayerProps) {
-  const router = useRouter();
+  const { audio, t, language } = useSettings();
+  const [activeScenario, setActiveScenario] = useState<Scenario>(initialScenario);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+
+  // Auto-translate scenario if the selected language differs from the scenario's native locale
+  useEffect(() => {
+    let isCancelled = false;
+
+    async function checkAndTranslate() {
+      const scenarioLang = initialScenario.locale.split('-')[0];
+      if (scenarioLang !== language) {
+        setIsTranslating(true);
+        try {
+          const translated = await translateScenario(initialScenario, language);
+          if (!isCancelled) {
+            setActiveScenario(translated);
+          }
+        } catch (err) {
+          console.warn('Auto translation failed, using original:', err);
+        } finally {
+          if (!isCancelled) {
+            setIsTranslating(false);
+          }
+        }
+      } else {
+        setActiveScenario(initialScenario);
+      }
+    }
+
+    checkAndTranslate();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [initialScenario, language]);
+
   const [state, dispatch] = useReducer(
     scenarioReducer,
-    scenario,
+    activeScenario,
     createInitialEngineState
   );
-  const { audio, t, language, setLanguage } = useSettings();
 
-  const currentNode = state.scenario.nodes[state.currentNodeId];
-
-  // Browser speech synthesis for spoken audio if enabled
-  const speakMessages = useCallback(() => {
-    if (audio === 'on' && typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      if (currentNode && currentNode.messages.length > 0) {
-        const textToSpeak = currentNode.messages
-          .map((m) => m.spokenText || m.text)
-          .join('. ');
-        const utterance = new SpeechSynthesisUtterance(textToSpeak);
-        utterance.rate = 0.95;
-        // set language voice
-        utterance.lang = scenario.locale || (language === 'bn' ? 'bn-BD' : 'en-US');
-        window.speechSynthesis.speak(utterance);
-      }
-    }
-  }, [audio, currentNode, scenario.locale, language]);
-
+  // Re-sync reducer when activeScenario translates
   useEffect(() => {
-    if (!state.outcome && !state.showFeedback) {
-      speakMessages();
+    dispatch({ type: 'SET_SCENARIO', scenario: activeScenario });
+  }, [activeScenario]);
+
+  const currentNode = state.scenario.nodes[state.currentNodeId] || Object.values(state.scenario.nodes)[0];
+
+  // Universal text-to-speech for any language
+  const handlePlayVoice = useCallback(() => {
+    if (!currentNode || !currentNode.messages || currentNode.messages.length === 0) return;
+    const textToSpeak = currentNode.messages
+      .map((m) => m.spokenText || m.text)
+      .join('. ');
+
+    setIsPlayingAudio(true);
+    // Uses neural streaming TTS for the target language (e.g. 'bn', 'en', 'hi', 'es', 'ar')
+    speakText(textToSpeak, language, () => {
+      setIsPlayingAudio(false);
+    });
+  }, [currentNode, language]);
+
+  // Autoplay voice if setting is enabled
+  useEffect(() => {
+    if (audio === 'on' && !state.outcome && !state.showFeedback && !isTranslating) {
+      handlePlayVoice();
     }
     return () => {
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
+      stopSpeech();
     };
-  }, [state.currentNodeId, state.outcome, state.showFeedback, speakMessages]);
+  }, [state.currentNodeId, state.outcome, state.showFeedback, audio, isTranslating, handlePlayVoice]);
 
   const handleSelectChoice = (choice: Choice) => {
+    stopSpeech();
+    setIsPlayingAudio(false);
     dispatch({ type: 'SELECT_CHOICE', choice });
   };
 
@@ -79,17 +117,9 @@ export function ScenarioPlayer({
   };
 
   const handleRestart = () => {
+    stopSpeech();
+    setIsPlayingAudio(false);
     dispatch({ type: 'RESTART' });
-  };
-
-  // Instant Translate / Switch Language handler
-  const pairedScenarioId = SCENARIO_PAIRS[scenario.id];
-  const handleToggleTranslation = () => {
-    const nextLang = language === 'en' ? 'bn' : 'en';
-    setLanguage(nextLang);
-    if (pairedScenarioId) {
-      router.push(`/drill/${pairedScenarioId}`);
-    }
   };
 
   // If completed, show Debrief Screen
@@ -126,11 +156,11 @@ export function ScenarioPlayer({
 
   // Map engine channel to device frame channel
   let deviceChannel: ChannelType = 'call-active';
-  if (currentNode.channel === 'sms') deviceChannel = 'sms';
-  else if (currentNode.channel === 'chat') deviceChannel = 'chat';
-  else if (currentNode.channel === 'email') deviceChannel = 'email';
-  else if (currentNode.channel === 'popup') deviceChannel = 'popup';
-  else if (state.stepNumber === 1 && currentNode.channel === 'call') {
+  if (currentNode?.channel === 'sms') deviceChannel = 'sms';
+  else if (currentNode?.channel === 'chat') deviceChannel = 'chat';
+  else if (currentNode?.channel === 'email') deviceChannel = 'email';
+  else if (currentNode?.channel === 'popup') deviceChannel = 'popup';
+  else if (state.stepNumber === 1 && currentNode?.channel === 'call') {
     deviceChannel = 'call-incoming';
   }
 
@@ -139,39 +169,28 @@ export function ScenarioPlayer({
       <PracticeBand onStop={onExit} />
 
       <main className="max-w-2xl w-full mx-auto px-4 py-6 flex flex-col flex-1">
-        {/* Top Control Bar: Personalized greeting + Translate button */}
-        <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
-          {toName ? (
-            <div className="bg-panel p-2 px-3 rounded-control border border-rule text-sm">
-              <span>
-                {language === 'bn' ? 'অনুশীলন করছেন: ' : 'Practicing for: '}
-                <strong className="text-ink">{toName}</strong>
-              </span>
-              {fromName && (
-                <span className="text-ink-muted ml-2">
-                  ({fromName} {language === 'bn' ? 'পাঠিয়েছেন' : 'sent this'})
-                </span>
-              )}
-            </div>
-          ) : (
-            <span className="text-xs font-bold text-ink-muted uppercase tracking-wider">
-              {scenario.title}
-            </span>
-          )}
+        {/* Loading indicator when auto-translating */}
+        {isTranslating && (
+          <div className="bg-signal-blue-light border border-signal-blue p-2.5 rounded-control text-xs text-signal-blue font-semibold mb-3 flex items-center gap-2">
+            <span className="animate-spin">🔄</span>
+            <span>{t.translatingScenario}</span>
+          </div>
+        )}
 
-          {/* Instant Translate / Switch to counterpart */}
-          {pairedScenarioId && (
-            <button
-              type="button"
-              onClick={handleToggleTranslation}
-              className="bg-panel border-2 border-signal-blue rounded-control px-3 py-1.5 text-xs font-bold text-signal-blue cursor-pointer inline-flex items-center gap-1.5 hover:bg-signal-blue hover:text-white transition-colors"
-              title="Switch between English and Bengali scenario versions"
-            >
-              <span>🌐</span>
-              <span>{language === 'en' ? 'বাংলা সংস্করণ দেখুন (Translate)' : 'View English Version'}</span>
-            </button>
-          )}
-        </div>
+        {/* Personalized greeting if drill was sent by family */}
+        {toName && (
+          <div className="bg-panel p-2.5 px-4 rounded-control border border-rule mb-3 flex items-center justify-between text-sm">
+            <span>
+              {t.practicingFor}{' '}
+              <strong className="text-ink">{toName}</strong>
+            </span>
+            {fromName && (
+              <span className="text-ink-muted">
+                {fromName} {t.sentThis}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Progress Route Line */}
         <RouteLine
@@ -180,34 +199,45 @@ export function ScenarioPlayer({
         />
 
         {/* Scammer Urgency/Pressure Meter */}
-        <PressureMeter level={currentNode.pressure} />
+        <PressureMeter level={currentNode?.pressure || 0} />
 
         {/* Realistic Simulated Device Screen */}
         <DeviceFrame
           channel={deviceChannel}
-          senderName={currentNode.sender.displayName}
-          senderSubtitle={currentNode.sender.handle}
-          caption={
-            language === 'bn'
-              ? `নকল ${currentNode.channel} স্ক্রিন। মনে রাখবেন, এখানে কিছুই বাস্তব নয়।`
-              : `Simulated ${currentNode.channel} screen. Remember, nothing here is real.`
-          }
-          messages={currentNode.messages.map((m) => ({
+          senderName={currentNode?.sender?.displayName || 'Unknown'}
+          senderSubtitle={currentNode?.sender?.handle}
+          caption={t.deviceSimulatedScreen}
+          messages={(currentNode?.messages || []).map((m) => ({
             text: m.text,
             isIncoming: true,
           }))}
           onAnswer={deviceChannel === 'call-incoming' ? () => {} : undefined}
           onDecline={deviceChannel === 'call-incoming' ? () => handleSelectChoice({
             id: 'decline-call',
-            label: language === 'bn' ? 'কল কেটে দিন (Decline)' : 'Decline call',
+            label: t.deviceDecline,
             next: 'END_SAFE',
             habit: 'pause',
-            feedback: language === 'bn'
-              ? 'চমৎকার! অপরিচিত নম্বর থেকে আসা চাপমূলক ফোন কেটে দেওয়াই সবচেয়ে নিরাপদ।'
-              : 'Great move. Declining calls from unknown numbers avoids the pressure entirely.',
+            feedback: t.safeOutcomeTitle,
             points: 1,
           }) : undefined}
         />
+
+        {/* Universal Voice Playback Button */}
+        {currentNode?.channel === 'call' && (
+          <div className="flex justify-end my-1">
+            <button
+              type="button"
+              onClick={isPlayingAudio ? stopSpeech : handlePlayVoice}
+              className="inline-flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-control border border-control-edge bg-panel hover:bg-panel-darker text-ink transition-colors cursor-pointer"
+              aria-label={isPlayingAudio ? t.voiceStop : t.voiceListen}
+            >
+              <span>{isPlayingAudio ? '⏹️' : '🔊'}</span>
+              <span>
+                {isPlayingAudio ? t.voiceStop : t.voiceListen}
+              </span>
+            </button>
+          </div>
+        )}
 
         {/* Choices Area */}
         {!state.showFeedback ? (
@@ -215,7 +245,7 @@ export function ScenarioPlayer({
             <h3 className="text-xl font-bold text-ink mb-1">
               {t.whatToDoNext}
             </h3>
-            {currentNode.choices.map((choice, index) => (
+            {(currentNode?.choices || []).map((choice, index) => (
               <ChoiceButton
                 key={choice.id}
                 label={choice.label}

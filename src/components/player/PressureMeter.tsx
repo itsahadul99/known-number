@@ -1,5 +1,8 @@
+'use client';
+
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { useSettings } from '@/lib/settings-context';
 
 export type PressureLevel = 0 | 1 | 2 | 3;
 
@@ -8,25 +11,27 @@ interface PressureMeterProps {
   className?: string;
 }
 
-const PRESSURE_LABELS: Record<PressureLevel, { label: string; description: string }> = {
-  0: { label: 'Calm', description: 'Caller is asking conversational questions' },
-  1: { label: 'Rising', description: 'Caller begins introducing time pressure' },
-  2: { label: 'High', description: 'Caller claims emergency and demands secrecy' },
-  3: { label: 'Peak urgency', description: 'Scammer relies on intense panic or intimidation' },
-};
-
 export function PressureMeter({ level, className }: PressureMeterProps) {
-  const current = PRESSURE_LABELS[level] || PRESSURE_LABELS[0];
+  const { t } = useSettings();
+
+  const labels: Record<PressureLevel, string> = {
+    0: t.pressureCalm,
+    1: t.pressureRising,
+    2: t.pressureHigh,
+    3: t.pressurePeak,
+  };
+
+  const currentLabel = labels[level] || labels[0];
 
   return (
     <div
       className={cn('flex flex-col gap-1.5 my-3 mb-5', className)}
       role="region"
-      aria-label={`Scammer pressure indicator: ${current.label}. ${current.description}`}
+      aria-label={`${t.urgencyPressure} ${currentLabel}`}
     >
       <div className="flex justify-between items-center text-sm">
         <span className="text-ink-muted font-semibold">
-          Urgency pressure:
+          {t.urgencyPressure}
         </span>
         <span
           className={cn(
@@ -34,7 +39,7 @@ export function PressureMeter({ level, className }: PressureMeterProps) {
             level >= 2 ? 'text-stop-red' : level === 1 ? 'text-ink' : 'text-safe-green'
           )}
         >
-          {current.label}
+          {currentLabel}
         </span>
       </div>
 
