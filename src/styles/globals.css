@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --base-size: 20px;
+}
+
+[data-text-size="normal"] {
+  --base-size: 20px;
+}
+[data-text-size="large"] {
+  --base-size: 24px;
+}
+[data-text-size="extra-large"] {
+  --base-size: 28px;
+}
+
+/* High contrast mode overrides */
+[data-contrast="high"] {
+  --tw-color-ink: #000000;
+  --tw-color-panel: #FFFFFF;
+}
+
+html {
+  font-size: var(--base-size);
+  color: #12263A;
+  background-color: #FFFFFF;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #FFFFFF;
+  color: #12263A;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+p, li, dl {
+  max-width: 62ch;
+  text-align: left;
+}
+
+/* Accessible interactive focus */
+:focus-visible {
+  outline: 3px solid #0A4F8A;
+  outline-offset: 2px;
+}
+
+/* Print CSS */
+@media print {
+  body {
+    background: #FFF !important;
+    color: #000 !important;
+    font-size: 12pt;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+}
