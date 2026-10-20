@@ -41,7 +41,7 @@ export function SettingsModal() {
           <button
             type="button"
             onClick={() => setIsSettingsOpen(false)}
-            aria-label="Close settings"
+            aria-label={t.closeSettings}
             className="bg-transparent border-2 border-control-edge rounded-control w-11 h-11 text-xl font-bold cursor-pointer text-ink hover:bg-panel flex items-center justify-center"
           >
             ✕

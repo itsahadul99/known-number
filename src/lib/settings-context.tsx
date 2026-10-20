@@ -39,7 +39,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (['en', 'bn', 'hi', 'es', 'ar'].includes(parsed.language)) setLanguageState(parsed.language);
+        if (['en', 'bn'].includes(parsed.language)) setLanguageState(parsed.language);
         if (parsed.textSize) setTextSizeState(parsed.textSize);
         if (parsed.contrast) setContrastState(parsed.contrast);
         if (parsed.audio) setAudioState(parsed.audio);

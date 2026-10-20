@@ -25,7 +25,7 @@ export default function ResultPage() {
 
   const scenario = payload ? getScenarioById(payload.scenarioId) : undefined;
   const isSafe = payload?.outcome === 'safe';
-  const isBn = language === 'bn';
+  const isBn = scenario ? scenario.locale.startsWith('bn') : language === 'bn';
   const personName = payload?.recipientName || (isBn ? 'আপনার প্রিয়জন' : 'Your relative');
 
   return (

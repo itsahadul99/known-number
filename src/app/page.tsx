@@ -14,32 +14,19 @@ const CATEGORY_NAMES: Record<string, Record<string, string>> = {
   'bank-impersonation': {
     en: 'Bank Impersonation',
     bn: 'ব্যাংক ও বিকাশ প্রতারণা',
-    hi: 'बैंक धोखाधड़ी',
-    es: 'Suplantación bancaria',
-    ar: 'انتحال البنك',
   },
-  'grandchild-emergency': {
+  'family-distress': {
     en: 'Family Emergency',
     bn: 'পরিবারের জরুরি বিপদ',
-    hi: 'पारिवारिक आपातकाल',
-    es: 'Emergencia familiar',
-    ar: 'طوارئ عائلية',
   },
-  'parcel-phishing': {
+  'delivery-phishing': {
     en: 'Package / Delivery Scam',
     bn: 'পার্সেল ও কুরিয়ার প্রতারণা',
-    hi: 'पार्सल धोखाधड़ी',
-    es: 'Fraude de paquetería',
-    ar: 'احتيال الطرود',
   },
 };
 
 function getDurationUnit(lang: string): string {
-  if (lang === 'bn') return 'মিনিট';
-  if (lang === 'hi') return 'मिनट';
-  if (lang === 'es') return 'minutos';
-  if (lang === 'ar') return 'دقائق';
-  return 'minutes';
+  return lang === 'bn' ? 'মিনিট' : 'minutes';
 }
 
 export default function HomePage() {
@@ -67,13 +54,7 @@ export default function HomePage() {
 
   const demoSender =
     language === 'bn'
-      ? { name: 'বিকাশ ভেরিফিকেশন ইউনিট', subtitle: 'প্রধান কার্যালয়, ঢাকা' }
-      : language === 'hi'
-      ? { name: 'बैंक सत्यापन विभाग', subtitle: 'मुख्यालय, मुंबई' }
-      : language === 'es'
-      ? { name: 'Dpto. de Seguridad Bancaria', subtitle: 'Oficina Central' }
-      : language === 'ar'
-      ? { name: 'قسم أمن الحسابات البنكية', subtitle: 'الفرع الرئيسي' }
+      ? { name: 'বিকাশ ভেরিফিকেশন ইউনিট', subtitle: 'প্রধান কার্যালয়, ঢাকা' }
       : { name: 'Northfield Bank', subtitle: 'Fraud Prevention Unit' };
 
   return (
@@ -200,7 +181,7 @@ export default function HomePage() {
           {currentScenarios.map((scenario) => {
             const categoryLabel =
               CATEGORY_NAMES[scenario.category]?.[language] ||
-              scenario.category.replace('-', ' ');
+              scenario.category.replace(/-/g, ' ');
             const durationUnit = getDurationUnit(language);
 
             return (

@@ -79,12 +79,36 @@ export type EngineAction =
   | { type: 'RESTART' }
   | { type: 'SET_SCENARIO'; scenario: Scenario };
 
+/**
+ * Length of the longest route through the scenario, counted in nodes.
+ * Counting every node would overstate the length, because branches are mutually exclusive.
+ */
+export function longestPathLength(scenario: Scenario): number {
+  const memo = new Map<string, number>();
+
+  const walk = (nodeId: string, visiting: Set<string>): number => {
+    const node = scenario.nodes[nodeId];
+    if (!node || visiting.has(nodeId)) return 0;
+    const cached = memo.get(nodeId);
+    if (cached !== undefined) return cached;
+
+    visiting.add(nodeId);
+    const best = Math.max(0, ...node.choices.map((c) => walk(c.next, visiting)));
+    visiting.delete(nodeId);
+
+    memo.set(nodeId, 1 + best);
+    return 1 + best;
+  };
+
+  return walk(scenario.startNodeId, new Set()) || 1;
+}
+
 export function createInitialEngineState(scenario: Scenario): EngineState {
   return {
     scenario,
     currentNodeId: scenario.startNodeId,
     stepNumber: 1,
-    totalSteps: Object.keys(scenario.nodes).length || 5,
+    totalSteps: longestPathLength(scenario),
     selectedChoice: null,
     showFeedback: false,
     habitsDemonstrated: [],
@@ -165,6 +189,14 @@ export function scenarioReducer(state: EngineState, action: EngineAction): Engin
     }
 
     case 'SET_SCENARIO': {
+      // Same scenario in another language: swap the text but keep the user's progress.
+      if (action.scenario.id === state.scenario.id) {
+        const node = action.scenario.nodes[state.currentNodeId];
+        const selectedChoice = state.selectedChoice
+          ? node?.choices.find((c) => c.id === state.selectedChoice!.id) ?? state.selectedChoice
+          : null;
+        return { ...state, scenario: action.scenario, selectedChoice };
+      }
       return createInitialEngineState(action.scenario);
     }
 

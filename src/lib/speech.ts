@@ -1,10 +1,14 @@
 'use client';
 
+import { prepareSpeechText } from './speech-text';
+
 let currentAudio: HTMLAudioElement | null = null;
 let audioQueue: string[] = [];
 let currentQueueLang: string = 'en';
 let currentQueueOnEnd: (() => void) | null = null;
 let isPlayingQueue = false;
+// Bumped on every speakText/stopSpeech so callbacks from an older queue are ignored
+let generation = 0;
 
 /**
  * Detects the script language of the text (Bangla, Hindi, Arabic, or fallback)
@@ -22,11 +26,7 @@ export function detectTextLanguage(text: string, fallbackLang: string = 'en'): s
  * without cutting words, respecting punctuation and Bengali dāri (।).
  */
 function splitTextIntoPhrases(text: string): string[] {
-  // Strip quotes and excess brackets
-  const clean = text
-    .replace(/["“”«»]/g, '')
-    .replace(/[()]/g, '')
-    .trim();
+  const clean = prepareSpeechText(text);
 
   if (!clean) return [];
 
@@ -82,6 +82,15 @@ function playNextChunk() {
     return;
   }
 
+  // Each chunk may advance the queue exactly once, even if error and play() rejection both fire
+  const myGeneration = generation;
+  let advanced = false;
+  const next = () => {
+    if (advanced || myGeneration !== generation) return;
+    advanced = true;
+    playNextChunk();
+  };
+
   // Determine exact language for this specific chunk
   const langCode = detectTextLanguage(chunk, currentQueueLang);
   const audioUrl = `/api/tts?lang=${encodeURIComponent(langCode)}&text=${encodeURIComponent(chunk)}`;
@@ -92,25 +101,23 @@ function playNextChunk() {
     audio.preload = 'auto';
     audio.src = audioUrl;
 
-    audio.onended = () => {
-      playNextChunk();
-    };
+    audio.onended = next;
 
     audio.onerror = (e) => {
       console.warn('TTS streaming error, attempting browser speech synthesis fallback:', e);
-      fallbackSpeechSynthesis(chunk, langCode, () => playNextChunk());
+      fallbackSpeechSynthesis(chunk, langCode, next);
     };
 
     const playPromise = audio.play();
     if (playPromise !== undefined) {
       playPromise.catch((err) => {
         console.warn('Audio play rejected by browser policy, trying fallback:', err);
-        fallbackSpeechSynthesis(chunk, langCode, () => playNextChunk());
+        fallbackSpeechSynthesis(chunk, langCode, next);
       });
     }
   } catch (err) {
     console.warn('Audio element initialization error:', err);
-    fallbackSpeechSynthesis(chunk, langCode, () => playNextChunk());
+    fallbackSpeechSynthesis(chunk, langCode, next);
   }
 }
 
@@ -182,6 +189,7 @@ export function speakText(
   onEnd?: () => void
 ): boolean {
   stopSpeech();
+  generation++;
 
   const phrases = splitTextIntoPhrases(text);
   if (phrases.length === 0) {
@@ -199,9 +207,49 @@ export function speakText(
 }
 
 /**
+ * Plays a pre-generated audio file (see scripts/generate-audio.ts). If the file is missing
+ * or fails to play, falls back to the chunked speakText() path with the same text.
+ */
+export function speakFile(
+  url: string,
+  fallbackText: string,
+  lang: string = 'en',
+  onEnd?: () => void
+): boolean {
+  stopSpeech();
+  const myGeneration = ++generation;
+  currentQueueOnEnd = onEnd || null;
+  isPlayingQueue = true;
+
+  const fallback = () => {
+    if (myGeneration !== generation) return;
+    speakText(fallbackText, lang, onEnd);
+  };
+
+  try {
+    const audio = new Audio(url);
+    currentAudio = audio;
+    audio.onended = () => {
+      if (myGeneration !== generation) return;
+      isPlayingQueue = false;
+      currentAudio = null;
+      const cb = currentQueueOnEnd;
+      currentQueueOnEnd = null;
+      cb?.();
+    };
+    audio.onerror = fallback;
+    audio.play().catch(fallback);
+  } catch {
+    fallback();
+  }
+  return true;
+}
+
+/**
  * Instantly stops all current speech or queued audio.
  */
 export function stopSpeech() {
+  generation++;
   isPlayingQueue = false;
   audioQueue = [];
 

@@ -16,8 +16,10 @@ import { FeedbackPanel } from './FeedbackPanel';
 import { DebriefScreen } from './DebriefScreen';
 import { DeviceFrame, ChannelType } from '@/components/device/DeviceFrame';
 import { encodeResultHash } from '@/lib/share';
-import { speakText, stopSpeech } from '@/lib/speech';
-import { translateScenario } from '@/lib/translator';
+import { speakText, speakFile, stopSpeech } from '@/lib/speech';
+import { getStaticAudioUrl } from '@/content/audio-manifest';
+import Link from 'next/link';
+import { ALL_SCENARIOS } from '@/content/scenarios';
 
 interface ScenarioPlayerProps {
   scenario: Scenario;
@@ -33,41 +35,9 @@ export function ScenarioPlayer({
   onExit,
 }: ScenarioPlayerProps) {
   const { audio, t, language } = useSettings();
-  const [activeScenario, setActiveScenario] = useState<Scenario>(initialScenario);
-  const [isTranslating, setIsTranslating] = useState(false);
+  const activeScenario = initialScenario;
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
-
-  // Auto-translate scenario if the selected language differs from the scenario's native locale
-  useEffect(() => {
-    let isCancelled = false;
-
-    async function checkAndTranslate() {
-      const scenarioLang = initialScenario.locale.split('-')[0];
-      if (scenarioLang !== language) {
-        setIsTranslating(true);
-        try {
-          const translated = await translateScenario(initialScenario, language);
-          if (!isCancelled) {
-            setActiveScenario(translated);
-          }
-        } catch (err) {
-          console.warn('Auto translation failed, using original:', err);
-        } finally {
-          if (!isCancelled) {
-            setIsTranslating(false);
-          }
-        }
-      } else {
-        setActiveScenario(initialScenario);
-      }
-    }
-
-    checkAndTranslate();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [initialScenario, language]);
+  const [callAnswered, setCallAnswered] = useState(false);
 
   const [state, dispatch] = useReducer(
     scenarioReducer,
@@ -80,6 +50,16 @@ export function ScenarioPlayer({
     dispatch({ type: 'SET_SCENARIO', scenario: activeScenario });
   }, [activeScenario]);
 
+  // Same type of scam, written in the user's language (if one exists)
+  const scenarioLang = initialScenario.locale.split('-')[0];
+  const counterpart = ALL_SCENARIOS.find(
+    (s) => s.category === initialScenario.category && s.locale.split('-')[0] === language
+  );
+
+  // The first call screen rings until the user answers (or declines)
+  const isRinging =
+    state.stepNumber === 1 && state.scenario.nodes[state.currentNodeId]?.channel === 'call' && !callAnswered;
+
   const currentNode = state.scenario.nodes[state.currentNodeId] || Object.values(state.scenario.nodes)[0];
 
   // Universal text-to-speech for any language
@@ -90,27 +70,54 @@ export function ScenarioPlayer({
       .join('. ');
 
     setIsPlayingAudio(true);
-    // Uses neural streaming TTS for the target language (e.g. 'bn', 'en', 'hi', 'es', 'ar')
-    speakText(textToSpeak, language, () => {
-      setIsPlayingAudio(false);
-    });
-  }, [currentNode, language]);
+    const done = () => setIsPlayingAudio(false);
+
+    // Prefer the pre-generated neural voice clip; falls back to live TTS if it is missing
+    const clipUrl =
+      state.scenario.locale.split('-')[0] === language
+        ? getStaticAudioUrl(state.scenario.id, currentNode.id)
+        : undefined;
+    if (clipUrl) {
+      speakFile(clipUrl, textToSpeak, language, done);
+    } else {
+      speakText(textToSpeak, language, done);
+    }
+  }, [currentNode, language, state.scenario.id, state.scenario.locale]);
 
   // Autoplay voice if setting is enabled
   useEffect(() => {
-    if (audio === 'on' && !state.outcome && !state.showFeedback && !isTranslating) {
+    if (audio === 'on' && !state.outcome && !state.showFeedback && !isRinging) {
       handlePlayVoice();
     }
     return () => {
       stopSpeech();
     };
-  }, [state.currentNodeId, state.outcome, state.showFeedback, audio, isTranslating, handlePlayVoice]);
+  }, [state.currentNodeId, state.outcome, state.showFeedback, audio, isRinging, handlePlayVoice]);
 
   const handleSelectChoice = (choice: Choice) => {
     stopSpeech();
     setIsPlayingAudio(false);
     dispatch({ type: 'SELECT_CHOICE', choice });
   };
+
+  // Number keys 1-9 pick the matching choice (the numbered badges on the buttons)
+  useEffect(() => {
+    if (state.outcome || state.showFeedback || isRinging) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      const idx = Number(e.key) - 1;
+      const choice = state.scenario.nodes[state.currentNodeId]?.choices[idx];
+      if (choice) {
+        stopSpeech();
+        setIsPlayingAudio(false);
+        dispatch({ type: 'SELECT_CHOICE', choice });
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [state.outcome, state.showFeedback, state.currentNodeId, state.scenario, isRinging]);
 
   const handleAdvance = () => {
     dispatch({ type: 'ADVANCE_NODE' });
@@ -119,6 +126,7 @@ export function ScenarioPlayer({
   const handleRestart = () => {
     stopSpeech();
     setIsPlayingAudio(false);
+    setCallAnswered(false);
     dispatch({ type: 'RESTART' });
   };
 
@@ -160,7 +168,7 @@ export function ScenarioPlayer({
   else if (currentNode?.channel === 'chat') deviceChannel = 'chat';
   else if (currentNode?.channel === 'email') deviceChannel = 'email';
   else if (currentNode?.channel === 'popup') deviceChannel = 'popup';
-  else if (state.stepNumber === 1 && currentNode?.channel === 'call') {
+  else if (isRinging) {
     deviceChannel = 'call-incoming';
   }
 
@@ -169,11 +177,13 @@ export function ScenarioPlayer({
       <PracticeBand onStop={onExit} />
 
       <main className="max-w-2xl w-full mx-auto px-4 py-6 flex flex-col flex-1">
-        {/* Loading indicator when auto-translating */}
-        {isTranslating && (
-          <div className="bg-signal-blue-light border border-signal-blue p-2.5 rounded-control text-xs text-signal-blue font-semibold mb-3 flex items-center gap-2">
-            <span className="animate-spin">🔄</span>
-            <span>{t.translatingScenario}</span>
+        {/* The drill is written in the other language: offer the matching drill in the user's language */}
+        {scenarioLang !== language && counterpart && (
+          <div role="status" className="bg-signal-blue-light border border-signal-blue p-3 rounded-control text-sm text-ink mb-3 flex flex-wrap items-center justify-between gap-2">
+            <span>{t.drillOtherLanguage}</span>
+            <Link href={`/drill/${counterpart.id}`} className="font-bold text-signal-blue underline">
+              {t.openInYourLanguage}
+            </Link>
           </div>
         )}
 
@@ -211,8 +221,8 @@ export function ScenarioPlayer({
             text: m.text,
             isIncoming: true,
           }))}
-          onAnswer={deviceChannel === 'call-incoming' ? () => {} : undefined}
-          onDecline={deviceChannel === 'call-incoming' ? () => handleSelectChoice({
+          onAnswer={isRinging ? () => setCallAnswered(true) : undefined}
+          onDecline={isRinging ? () => handleSelectChoice({
             id: 'decline-call',
             label: t.deviceDecline,
             next: 'END_SAFE',
@@ -223,7 +233,7 @@ export function ScenarioPlayer({
         />
 
         {/* Universal Voice Playback Button */}
-        {currentNode?.channel === 'call' && (
+        {!isRinging && (
           <div className="flex justify-end my-1">
             <button
               type="button"
@@ -240,8 +250,8 @@ export function ScenarioPlayer({
         )}
 
         {/* Choices Area */}
-        {!state.showFeedback ? (
-          <section className="flex flex-col gap-3 mt-4" aria-label="Available choices">
+        {isRinging ? null : !state.showFeedback ? (
+          <section className="flex flex-col gap-3 mt-4" aria-label={t.availableChoices}>
             <h3 className="text-xl font-bold text-ink mb-1">
               {t.whatToDoNext}
             </h3>

@@ -7,6 +7,7 @@ import { Footer } from '@/components/layout/Footer';
 import { getAllScenarios } from '@/content/scenarios';
 import { encodeDrillHash } from '@/lib/share';
 import { Button } from '@/components/ui/button';
+import { SITE_URL } from '@/lib/seo';
 import { useSettings } from '@/lib/settings-context';
 
 export default function OrganisePage() {
@@ -27,9 +28,10 @@ export default function OrganisePage() {
     from: senderName.trim() || undefined,
     to: recipientName.trim() || undefined,
     region: language === 'bn' ? 'bd' : 'us',
+    lang: language,
   });
 
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://knownnumber.org';
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : SITE_URL;
   const drillLink = `${baseUrl}/drill/${selectedScenario.id}#${hashParams}`;
 
   let messagePreview = '';
@@ -38,15 +40,6 @@ export default function OrganisePage() {
   if (language === 'bn') {
     const greeting = recipientName.trim() ? `${recipientName.trim()}, ` : 'আম্মু, ';
     messagePreview = `${greeting}Known Number দেখে নাও। মাত্র ৫ মিনিট লাগবে। প্রতারক চক্র কীভাবে ফোন দিয়ে ভয় দেখায় ও টাকা হাতিয়ে নেয় তা নিরাপদে অনুশীলন করা যায়। এই লিঙ্কটি খুলে প্র্যাকটিস করে নাও:\n\n${drillLink}${signature}`;
-  } else if (language === 'hi') {
-    const greeting = recipientName.trim() ? `${recipientName.trim()}, ` : 'मम्मी, ';
-    messagePreview = `${greeting}Known Number आज़माएं। सिर्फ 5 मिनट लगेंगे। धोखेबाज़ फोन पर कैसे दबाव बनाते हैं, उसका सुरक्षित अभ्यास कर लें:\n\n${drillLink}${signature}`;
-  } else if (language === 'es') {
-    const greeting = recipientName.trim() ? `${recipientName.trim()}, ` : 'Mamá, ';
-    messagePreview = `${greeting}prueba Known Number. Solo toma cinco minutos para practicar cómo reaccionar ante llamadas fraudulentas con seguridad:\n\n${drillLink}${signature}`;
-  } else if (language === 'ar') {
-    const greeting = recipientName.trim() ? `${recipientName.trim()}, ` : 'أمي، ';
-    messagePreview = `${greeting}جرّبي Known Number. يستغرق خمس دقائق فقط للتدرب على كيفية التصرف مع المكالمات الاحتيالية بأمان:\n\n${drillLink}${signature}`;
   } else {
     const greeting = recipientName.trim() ? `${recipientName.trim()}, ` : 'Mum, ';
     messagePreview = `${greeting}try Known Number. It takes five minutes and rehearses the realistic calls scammers use so you know how to react in safety. Check this drill:\n\n${drillLink}${signature}`;
@@ -110,7 +103,7 @@ export default function OrganisePage() {
             {scenarios.map((scenario) => {
               const isSelected = scenario.id === selectedScenarioId;
               const durationText = `${scenario.durationMin} ${
-                language === 'bn' ? 'মিনিট' : language === 'hi' ? 'मिनट' : 'min'
+                language === 'bn' ? 'মিনিট' : 'min'
               }`;
 
               return (
@@ -168,7 +161,7 @@ export default function OrganisePage() {
               <input
                 id={recipientInputId}
                 type="text"
-                placeholder={language === 'bn' ? 'যেমন: আম্মু, বাবা, নানা' : language === 'hi' ? 'जैसे: मम्मी, पापा' : 'e.g. Mum, Grandpa, David'}
+                placeholder={language === 'bn' ? 'যেমন: আম্মু, বাবা, নানা' : 'e.g. Mum, Grandpa, David'}
                 value={recipientName}
                 onChange={(e) => setRecipientName(e.target.value)}
                 className="min-h-[48px] px-4 py-2 border-2 border-control-edge rounded-control text-base focus-visible:outline-signal-blue"
@@ -182,7 +175,7 @@ export default function OrganisePage() {
               <input
                 id={senderInputId}
                 type="text"
-                placeholder={language === 'bn' ? 'যেমন: আহাদুল, তারেক' : language === 'hi' ? 'जैसे: राहुल, प्रिया' : 'e.g. Sam, Sarah'}
+                placeholder={language === 'bn' ? 'যেমন: আহাদুল, তারেক' : 'e.g. Sam, Sarah'}
                 value={senderName}
                 onChange={(e) => setSenderName(e.target.value)}
                 className="min-h-[48px] px-4 py-2 border-2 border-control-edge rounded-control text-base focus-visible:outline-signal-blue"

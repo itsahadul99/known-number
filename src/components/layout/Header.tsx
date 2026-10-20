@@ -58,13 +58,13 @@ export function Header() {
           <button
             type="button"
             onClick={() => setIsSettingsOpen(true)}
-            aria-label="Open display and contrast settings"
+            aria-label={t.openSettingsAria}
             className="bg-panel border-2 border-control-edge rounded-control px-3 py-2 text-sm font-semibold text-ink cursor-pointer min-h-[44px] inline-flex items-center gap-2 hover:bg-panel-darker transition-colors"
           >
             <span>{t.settings}</span>
             <span className="text-xs bg-paper px-2 py-0.5 rounded border border-rule hidden sm:inline">
-              {textSize === 'large' ? 'Large' : textSize === 'extra-large' ? 'XL' : '20px'}
-              {contrast === 'high' ? ' · Hi-Con' : ''}
+              {textSize === 'large' ? t.sizeLarge : textSize === 'extra-large' ? t.sizeXL : '20px'}
+              {contrast === 'high' ? ` · ${t.contrastShort}` : ''}
             </span>
           </button>
         </div>

@@ -4,6 +4,7 @@ export interface DrillHashParams {
   from?: string;
   to?: string;
   region?: string;
+  lang?: string;
 }
 
 export interface ResultPayload {
@@ -23,6 +24,7 @@ export function parseDrillHash(hash: string): DrillHashParams {
     from: params.get('from') || undefined,
     to: params.get('to') || undefined,
     region: params.get('region') || 'us',
+    lang: params.get('lang') || undefined,
   };
 }
 
@@ -31,6 +33,7 @@ export function encodeDrillHash(params: DrillHashParams): string {
   if (params.from) searchParams.set('from', params.from);
   if (params.to) searchParams.set('to', params.to);
   if (params.region) searchParams.set('region', params.region);
+  if (params.lang) searchParams.set('lang', params.lang);
   return searchParams.toString();
 }
 

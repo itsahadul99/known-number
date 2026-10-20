@@ -23,6 +23,7 @@
 }
 
 html {
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, var(--font-bengali), 'Noto Sans Bengali', sans-serif;
   font-size: var(--base-size);
   color: #12263A;
   background-color: #FFFFFF;

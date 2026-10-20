@@ -21,6 +21,7 @@ export function RouteLine({ currentStep, totalSteps, className }: RouteLineProps
       aria-valuenow={currentStep}
       aria-valuemin={1}
       aria-valuemax={totalSteps}
+      aria-valuetext={`${t.stepText} ${currentStep} ${t.ofText} ${totalSteps}`}
       aria-label={`${t.stepText} ${currentStep} ${t.ofText} ${totalSteps}`}
     >
       <div className="flex justify-between items-center">
@@ -54,7 +55,7 @@ export function RouteLine({ currentStep, totalSteps, className }: RouteLineProps
                 className={cn(
                   'rounded-full flex items-center justify-center transition-all',
                   isCurrent
-                    ? 'w-6 h-6 bg-paper border-3 border-signal-blue ring-2 ring-paper'
+                    ? 'w-6 h-6 bg-paper border-[3px] border-signal-blue ring-2 ring-paper'
                     : isCompleted
                     ? 'w-4 h-4 bg-signal-blue border-2 border-signal-blue'
                     : 'w-4 h-4 bg-paper border-2 border-control-edge'
