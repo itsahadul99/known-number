@@ -1,6 +1,7 @@
 import { ImageResponse } from 'next/og';
 
-export const size = { width: 32, height: 32 };
+// Google requires favicons to be a multiple of 48px for search results.
+export const size = { width: 192, height: 192 };
 export const contentType = 'image/png';
 
 export default function Icon() {
@@ -15,9 +16,9 @@ export default function Icon() {
           justifyContent: 'center',
           background: '#0A4F8A',
           color: '#fff',
-          fontSize: 22,
+          fontSize: 130,
           fontWeight: 800,
-          borderRadius: 6,
+          borderRadius: 36,
         }}
       >
         K

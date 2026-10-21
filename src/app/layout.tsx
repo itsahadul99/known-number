@@ -1,12 +1,15 @@
 import type { Metadata, Viewport } from "next";
 import "@/styles/globals.css";
+import Script from "next/script";
 import { Noto_Sans_Bengali } from "next/font/google";
 import { SettingsProvider } from "@/lib/settings-context";
 import { SkipLink } from "@/components/layout/SkipLink";
 import { SettingsModal } from "@/components/layout/SettingsModal";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE, SITE_URL } from "@/lib/seo";
 
-const bengaliFont = Noto_Sans_Bengali({
+const GTM_ID = "GTM-T5V36SW8";
+
+const bengaliFont =Noto_Sans_Bengali({
   subsets: ["bengali", "latin"],
   weight: ["400", "600", "700"],
   display: "swap",
@@ -78,8 +81,22 @@ const jsonLd = {
       "@id": `${SITE_URL}/#website`,
       url: SITE_URL,
       name: SITE_NAME,
+      alternateName: ["Known Number", "নোন নাম্বার"],
       description: SITE_DESCRIPTION,
       inLanguage: ["en", "bn"],
+      publisher: { "@id": `${SITE_URL}/#org` },
+    },
+    {
+      "@type": "Organization",
+      "@id": `${SITE_URL}/#org`,
+      name: SITE_NAME,
+      url: SITE_URL,
+      logo: {
+        "@type": "ImageObject",
+        url: `${SITE_URL}/icon`,
+        width: 192,
+        height: 192,
+      },
     },
     {
       "@type": "WebApplication",
@@ -112,8 +129,23 @@ export default function RootLayout({
           name="google-site-verification"
           content="mi80PnyMPzK68cv7mBrERzZwVldcMCqOwE6VDy-McKQ"
         />
+        <Script id="gtm" strategy="afterInteractive">
+          {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','${GTM_ID}');`}
+        </Script>
       </head>
       <body className="min-h-screen flex flex-col bg-paper text-ink selection:bg-signal-blue-light selection:text-ink">
+        <noscript>
+          <iframe
+            src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+            height="0"
+            width="0"
+            style={{ display: "none", visibility: "hidden" }}
+          />
+        </noscript>
         <SettingsProvider>
           <SkipLink />
 
