@@ -64,7 +64,7 @@ Only a basic title, description and keywords existed. No `robots`, `sitemap`, ca
 
 Build passes (`next build`, 26 pages).
 
-- `src/lib/seo.ts` — `SITE_URL` (set `NEXT_PUBLIC_SITE_URL` in prod; defaults to `https://knownnumber.app`, a placeholder you must replace), shared copy.
+- `src/lib/seo.ts` — `SITE_URL` (set `NEXT_PUBLIC_SITE_URL` in prod; defaults to `https://knownnumber.vercel.app`, a placeholder you must replace), shared copy.
 - `src/app/layout.tsx` — `metadataBase`, title template, OG/Twitter, robots, theme colour, keywords (incl. Bangla), JSON-LD `WebSite` + `WebApplication`.
 - `src/app/robots.ts`, `sitemap.ts` (all pages plus each drill), `manifest.ts`.
 - `opengraph-image.tsx`, `icon.tsx`, `apple-icon.tsx` — generated brand images (replace with designed assets later).

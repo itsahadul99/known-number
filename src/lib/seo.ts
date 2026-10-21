@@ -1,4 +1,4 @@
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://knownnumber.app').replace(/\/$/, '');
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://knownnumber.vercel.app').replace(/\/$/, '');
 export const SITE_NAME = 'Known Number';
 export const SITE_TAGLINE = 'Practice the call before it comes.';
 export const SITE_DESCRIPTION =
