@@ -40,7 +40,7 @@ export default function ResultPage() {
             </p>
           </div>
         ) : !payload ? (
-          <div className="bg-panel border-2 border-control-edge rounded-panel p-8 text-center flex flex-col items-center gap-4">
+          <div className="bg-panel border-2 border-control-edge rounded-panel p-5 sm:p-8 text-center flex flex-col items-center gap-4">
             <h1 className="text-2xl font-bold text-ink">
               {isBn ? 'কোনো ফলাফল পাওয়া যায়নি' : 'No result data found'}
             </h1>

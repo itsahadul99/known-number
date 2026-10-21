@@ -33,7 +33,7 @@ export function Logo({
         <VerifyIcon size={iconSize} color="#FFFFFF" />
       </div>
 
-      <div className="flex flex-col">
+      <div className="flex flex-col min-w-0">
         <span
           className={cn(
             'font-bold text-ink leading-tight tracking-tight',

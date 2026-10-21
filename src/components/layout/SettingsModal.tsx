@@ -27,22 +27,22 @@ export function SettingsModal() {
       role="dialog"
       aria-modal="true"
       aria-labelledby="settings-title"
-      className="fixed inset-0 bg-ink/65 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-ink/65 flex items-center justify-center z-50 p-2 sm:p-4"
       onClick={() => setIsSettingsOpen(false)}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-paper text-ink border-2 border-ink rounded-panel max-w-lg w-full p-6 flex flex-col gap-5 shadow-lg max-h-[90vh] overflow-y-auto"
+        className="bg-paper text-ink border-2 border-ink rounded-panel max-w-lg w-full p-4 sm:p-6 flex flex-col gap-4 sm:gap-5 shadow-lg max-h-[94vh] sm:max-h-[90vh] overflow-y-auto"
       >
-        <div className="flex justify-between items-center">
-          <h2 id="settings-title" className="text-2xl font-bold">
+        <div className="flex justify-between items-center gap-3">
+          <h2 id="settings-title" className="text-xl sm:text-2xl font-bold">
             {language === 'bn' ? 'ডিসপ্লে, ভাষা ও সাউন্ড সেটিংস' : 'Display & Audio Settings'}
           </h2>
           <button
             type="button"
             onClick={() => setIsSettingsOpen(false)}
             aria-label={t.closeSettings}
-            className="bg-transparent border-2 border-control-edge rounded-control w-11 h-11 text-xl font-bold cursor-pointer text-ink hover:bg-panel flex items-center justify-center"
+            className="shrink-0 bg-transparent border-2 border-control-edge rounded-control w-11 h-11 text-xl font-bold cursor-pointer text-ink hover:bg-panel flex items-center justify-center"
           >
             ✕
           </button>

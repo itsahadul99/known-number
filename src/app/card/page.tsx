@@ -48,7 +48,7 @@ export default function CardPage() {
         </div>
 
         {/* PRINTABLE CARD CONTAINER */}
-        <div className="border-4 border-ink p-8 rounded-panel bg-paper flex flex-col gap-8 shadow-sm print:border-2 print:p-6 print:rounded-none">
+        <div className="border-4 border-ink p-4 sm:p-8 rounded-panel bg-paper flex flex-col gap-8 shadow-sm print:border-2 print:p-6 print:rounded-none">
           {/* Card Header */}
           <div className="border-b-2 border-ink pb-4 flex justify-between items-center">
             <div>

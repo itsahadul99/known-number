@@ -32,6 +32,9 @@ html {
 
 body {
   min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-wrap: anywhere;
   display: flex;
   flex-direction: column;
   background-color: #FFFFFF;
