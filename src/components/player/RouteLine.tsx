@@ -57,8 +57,8 @@ export function RouteLine({ currentStep, totalSteps, className }: RouteLineProps
                   isCurrent
                     ? 'w-6 h-6 bg-paper border-[3px] border-signal-blue ring-2 ring-paper'
                     : isCompleted
-                    ? 'w-4 h-4 bg-signal-blue border-2 border-signal-blue'
-                    : 'w-4 h-4 bg-paper border-2 border-control-edge'
+                    ? 'w-4 h-4 bg-signal-blue border-2 border-signal-blue mt-1'
+                    : 'w-4 h-4 bg-paper border-2 border-control-edge  mt-1'
                 )}
                 aria-hidden="true"
               >
